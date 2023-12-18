@@ -12,10 +12,16 @@ class Transaksi extends Model
     protected $primaryKey = 'id_transaksi';
     protected $fillable = [
         'id_norek',
+        'id_user',
         'jumlah',
         'jenis_transaksi',
         'tanggal_transaksi',
     ];
+    
+    public function User()
+    {
+        return $this->belongsTo(User::class, 'id_user');
+    }
 
     public function NomorRekening()
     {

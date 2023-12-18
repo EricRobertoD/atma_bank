@@ -20,11 +20,19 @@ Auth::routes(['verify' => true]);
 Route::post('register', 'App\Http\Controllers\AuthController@register');
 Route::get('email-verification', 'App\Http\Controllers\AuthController@verify')->name('verification.verify');
 Route::post('login', 'App\Http\Controllers\AuthController@login');
+Route::post('logout', 'App\Http\Controllers\AuthController@logout');
 
 Route::middleware(['auth:sanctum', 'ability:web'])->group(function(){
     Route::get('nomorRekening', 'App\Http\Controllers\NomorRekeningController@index');
     Route::post('nomorRekening', 'App\Http\Controllers\NomorRekeningController@store');
+    Route::delete('nomorRekening/{nomorRekening}', 'App\Http\Controllers\NomorRekeningController@destroy');
 
+    Route::get('profile', 'App\Http\Controllers\AuthController@index');
+    Route::post('profile', 'App\Http\Controllers\AuthController@update');
+
+    Route::post('deposit', 'App\Http\Controllers\TransaksiController@deposit');
+    Route::post('transfer', 'App\Http\Controllers\TransaksiController@transfer');
+    Route::get('transaksi', 'App\Http\Controllers\TransaksiController@index');
 });
 
 

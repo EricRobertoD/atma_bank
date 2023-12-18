@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,46 +13,47 @@ use Illuminate\Support\Facades\View;
 
 class AuthController extends Controller
 {
-    public function verify(Request $request) {
+    public function verify(Request $request)
+    {
         $user = User::findOrFail($request->id);
-    
-        if (! hash_equals((string) $request->hash, sha1($user->getEmailForVerification()))) {
+
+        if (!hash_equals((string) $request->hash, sha1($user->getEmailForVerification()))) {
             return response()->json([
                 "message" => "Unauthorized",
                 "success" => false
             ], 403);
         }
-    
+
         if ($user->hasVerifiedEmail()) {
             return response()->json([
                 "message" => "User already verified!",
                 "success" => false
             ]);
         }
-    
+
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
-    
+
         $name = $user->name;
         $no_identitas = $user->no_identitas;
         $alamat = $user->alamat;
-    
+
         $details = [
             'username' => $name,
-            'website' => 'Your Website', 
-            'datetime' => now(), 
+            'website' => 'Your Website',
+            'datetime' => now(),
         ];
-    
+
         $details['name'] = $name;
         $details['no_identitas'] = $no_identitas;
         $details['alamat'] = $alamat;
-    
+
         $view = View::make('verification-success', compact('details'));
-    
+
         return $view;
     }
-    
+
 
     public function register(Request $request)
     {
@@ -72,7 +74,7 @@ class AuthController extends Controller
                 'message' => 'Registrasi gagal. Silakan periksa semua bagian yang ditandai.',
                 'errors' => $errors->toArray()
             ];
-            
+
             return response()->json($response, 400);
         }
 
@@ -87,7 +89,7 @@ class AuthController extends Controller
             'data' => $user
         ], 200);
     }
-    
+
     public function login(Request $request)
     {
         $loginData = $request->all();
@@ -95,25 +97,25 @@ class AuthController extends Controller
             'email' => 'required',
             'password' => 'required',
         ]);
-    
+
         if ($validate->fails()) {
             return response(['message' => $validate->errors()->first(), 'errors' => $validate->errors()], 400);
         }
-    
+
         $user = User::where('email', $loginData['email'])->first();
-    
+
         if ($user && $user->email_verified_at == null) {
             return response(['message' => 'Email belum diverifikasi!'], 401);
         }
-        
+
         if ($user && $user->role == 'admin') {
             return response(['message' => 'admin mohon login di tempat lain'], 401);
         }
-    
+
         if (Auth::guard('web')->attempt($loginData)) {
             $users = Auth::user();
-            $token = $users->createToken('Authentication Token',['web'])->plainTextToken;
-    
+            $token = $users->createToken('Authentication Token', ['web'])->plainTextToken;
+
             return response([
                 'message' => 'Authenticated',
                 'data' => [
@@ -135,21 +137,21 @@ class AuthController extends Controller
             'email' => 'required',
             'password' => 'required',
         ]);
-    
+
         if ($validate->fails()) {
             return response(['message' => $validate->errors()->first(), 'errors' => $validate->errors()], 400);
         }
-    
+
         $user = User::where('email', $loginData['email'])->first();
-    
+
         if ($user && $user->role == 'user') {
             return response(['message' => 'ini login khusus admin'], 401);
         }
-    
+
         if (Auth::guard('web')->attempt($loginData)) {
             $users = Auth::user();
-            $token = $users->createToken('Authentication Token',['web'])->plainTextToken;
-    
+            $token = $users->createToken('Authentication Token', ['web'])->plainTextToken;
+
             return response([
                 'message' => 'Authenticated',
                 'data' => [
@@ -171,12 +173,71 @@ class AuthController extends Controller
             $user->tokens->each(function ($token) {
                 $token->revoke();
             });
-    
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Logout Success',
                 'user' => $user
             ], 200);
         }
+    }
+
+    public function index()
+    {
+        $id = auth()->user()->id;
+        $user = User::where('id', $id)->get();
+
+        if (count($user) < 0) {
+            return response([
+                'status' => 'error',
+                'message' => 'Empty',
+                'data' => null
+            ], 400);
+        }
+        return response([
+            'status' => 'success',
+            'data' => $user
+        ], 200);
+    }
+
+    public function update(Request $request)
+    {
+        $id = auth()->user()->id;
+        $user = User::find($id);
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'no_identitas' => 'required',
+            'alamat' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Update gagal. Silakan periksa semua bagian yang ditandai.',
+                'errors' => $validator->errors()->toArray()
+            ], 400);
+        }
+        if ($request->hasFile('gambar')  && $request->file('gambar') !== null) {
+            $filenameWithExt = $request->file('gambar')->getClientOriginalName();
+            $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+            $extension = $request->file('gambar')->getClientOriginalExtension();
+            $fileNameToStore = $filename . '_' . time() . '.' . $extension;
+            $request->file('gambar')->storeAs('images', $fileNameToStore, 'images');
+            $user->update(['gambar' => $fileNameToStore]);
+        }
+
+        $user->update([
+            'name' => $request->input('name'),
+            'no_identitas' => $request->input('no_identitas'),
+            'alamat' => $request->input('alamat'),
+        ]);
+        $user->refresh();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Update Data Berhasil !',
+            'data' => $user
+        ], 200);
     }
 }
