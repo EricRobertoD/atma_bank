@@ -90,6 +90,40 @@ class AuthController extends Controller
         ], 200);
     }
 
+    
+    public function registerAdmin(Request $request)
+    {
+        $registerData = $request->all();
+
+        $validate = Validator::make($registerData, [
+            'email' => 'required|string|email|unique:users',
+            'name' => 'required',
+            'password' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            $errors = $validate->errors();
+            $response = [
+                'status' => 'error',
+                'message' => 'Registrasi gagal. Silakan periksa semua bagian yang ditandai.',
+                'errors' => $errors->toArray()
+            ];
+
+            return response()->json($response, 400);
+        }
+
+        $registerData['email_verified_at'] = now();
+        $registerData['password'] = bcrypt($registerData['password']);
+        $registerData['role'] = 'admin';
+
+        $user = User::create($registerData);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Admin berhasil dibuat!',
+            'data' => $user
+        ], 200);
+    }
+
     public function login(Request $request)
     {
         $loginData = $request->all();
@@ -137,21 +171,20 @@ class AuthController extends Controller
             'email' => 'required',
             'password' => 'required',
         ]);
-
+        $user = User::where('email', $loginData['email'])->first();
+    
         if ($validate->fails()) {
             return response(['message' => $validate->errors()->first(), 'errors' => $validate->errors()], 400);
         }
-
-        $user = User::where('email', $loginData['email'])->first();
-
         if ($user && $user->role == 'user') {
-            return response(['message' => 'ini login khusus admin'], 401);
+            return response(['message' => 'Users mohon login di tempat lain'], 401);
         }
-
-        if (Auth::guard('web')->attempt($loginData)) {
-            $users = Auth::user();
-            $token = $users->createToken('Authentication Token', ['web'])->plainTextToken;
-
+        
+    
+        if (Auth::guard('admin')->attempt($loginData)) {
+            $users = Auth::guard('admin')->user();
+            $token = $users->createToken('Authentication Token', ['admin'])->plainTextToken;
+    
             return response([
                 'message' => 'Authenticated',
                 'data' => [
@@ -162,7 +195,7 @@ class AuthController extends Controller
                 ],
             ]);
         } else {
-            return response(['message' => 'Email atau password salah'], 401);
+            return response(['message' => 'Invalid Credentials user'], 401);
         }
     }
 
@@ -237,6 +270,71 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Update Data Berhasil !',
+            'data' => $user
+        ], 200);
+    }
+
+    
+    public function updateAdmin(Request $request, User $user)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'no_identitas' => 'required',
+            'alamat' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Update gagal. Silakan periksa semua bagian yang ditandai.',
+                'errors' => $validator->errors()->toArray()
+            ], 400);
+        }
+        if ($request->hasFile('gambar')  && $request->file('gambar') !== null) {
+            $filenameWithExt = $request->file('gambar')->getClientOriginalName();
+            $filename = pathinfo($filenameWithExt, PATHINFO_FILENAME);
+            $extension = $request->file('gambar')->getClientOriginalExtension();
+            $fileNameToStore = $filename . '_' . time() . '.' . $extension;
+            $request->file('gambar')->storeAs('images', $fileNameToStore, 'images');
+            $user->update(['gambar' => $fileNameToStore]);
+        }
+
+        $user->update([
+            'name' => $request->input('name'),
+            'no_identitas' => $request->input('no_identitas'),
+            'alamat' => $request->input('alamat'),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Update Data Berhasil !',
+            'data' => $user
+        ], 200);
+    }
+
+    public function indexAdmin(){
+        $user = User::all();
+
+        if(count($user) > 0){
+            return response([
+                'status' => 'success',
+                'data' => $user
+            ], 200);
+        }
+
+        return response([
+            'message' => 'Empty',
+            'data' => null
+        ], 400); 
+    }
+
+
+    public function destroyAdmin(User $user){
+        $user->delete();
+    
+        return response([
+            'status' => 'success',
+            'message' => 'User deleted successfully',
             'data' => $user
         ], 200);
     }

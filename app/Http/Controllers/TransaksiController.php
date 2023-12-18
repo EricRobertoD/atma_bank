@@ -152,8 +152,6 @@ public function deposit(Request $request, NomorRekening $nomorRekening)
         ], 400);
     }
 
-    $nomorRekening = NomorRekening::findOrFail($nomorRekening->id_norek);
-
     if (!$nomorRekening) {
         return response([
             'status' => 'error',
@@ -198,7 +196,6 @@ public function transfer(Request $request, NomorRekening $nomorRekening)
         ], 400);
     }
 
-    $nomorRekening = NomorRekening::findOrFail($nomorRekening->id_norek);
     $tfNomorRekening = NomorRekening::where('norek', $request->tfNorek)->first();
 
     if (!$nomorRekening) {

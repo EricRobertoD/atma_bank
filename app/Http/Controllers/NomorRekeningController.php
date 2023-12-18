@@ -68,6 +68,41 @@ class NomorRekeningController extends Controller
             'data' => $norek
         ], 201);
     }
+
+    
+    public function storeAdmin(Request $request, User $user)
+{
+    $validator = Validator::make($request->all(), [
+        'jenis_kartu' => 'required',
+    ]);
+
+    if ($validator->fails()) {
+        return response([
+            'status' => 'error',
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 400);
+    }
+
+    $uniqueNorek = $this->generateUniqueNorek();
+
+    $id_user = $user->id;
+
+    $norek = NomorRekening::create([
+        'norek' => $uniqueNorek,
+        'id_user' => $id_user,
+        'saldo' => '50000',
+        'jenis_kartu' => $request->input('jenis_kartu'),
+    ]);
+
+    return response([
+        'status' => 'success',
+        'message' => 'Nomor Rekening created successfully',
+        'data' => $norek
+    ], 201);
+}
+
+
     public function destroy(NomorRekening $nomorRekening)
     {
         $nomorRekening->delete();

@@ -22,6 +22,7 @@ Route::get('email-verification', 'App\Http\Controllers\AuthController@verify')->
 Route::post('login', 'App\Http\Controllers\AuthController@login');
 Route::post('logout', 'App\Http\Controllers\AuthController@logout');
 Route::post('loginAdmin', 'App\Http\Controllers\AuthController@loginAdmin');
+Route::post('registerAdmin', 'App\Http\Controllers\AuthController@registerAdmin');
 
 
 Route::middleware(['auth:sanctum', 'ability:web'])->group(function(){
@@ -39,5 +40,10 @@ Route::middleware(['auth:sanctum', 'ability:web'])->group(function(){
 
 
 Route::middleware(['auth:sanctum', 'ability:admin'])->group(function(){
+    Route::get('profileAdmin', 'App\Http\Controllers\AuthController@indexAdmin');
+    Route::post('profileAdmin/{user}', 'App\Http\Controllers\AuthController@updateAdmin');
+    Route::delete('profileAdmin/{user}', 'App\Http\Controllers\AuthController@destroyAdmin');
 
+  
+    Route::post('storeAdmin/{user}', 'App\Http\Controllers\NomorRekeningController@storeAdmin');  
 });

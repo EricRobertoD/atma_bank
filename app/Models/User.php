@@ -51,4 +51,8 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(NomorRekening::class, 'id_user');
     }
+    public function Transaksi()
+    {
+        return $this->hasMany(Transaksi::class, 'id_user');
+    }
 }
