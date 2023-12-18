@@ -116,7 +116,7 @@ class NomorRekeningController extends Controller
 
     
     public function indexAdmin(){
-        $norek = NomorRekening::all();
+        $norek = NomorRekening::with('User')->get();
 
         if(count($norek) > 0){
             return response([
