@@ -136,14 +136,57 @@ public function depositAdmin(Request $request)
     ], 201);
 }
 
-
-public function transfer(Request $request)
+public function deposit(Request $request, NomorRekening $nomorRekening)
 {
     $id = auth()->user()->id;
 
     $validator = Validator::make($request->all(), [
         'jumlah' => 'required',
-        'norek' => 'required',
+    ]);
+
+    if ($validator->fails()) {
+        return response([
+            'status' => 'error',
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 400);
+    }
+
+    $nomorRekening = NomorRekening::findOrFail($nomorRekening->id_norek);
+
+    if (!$nomorRekening) {
+        return response([
+            'status' => 'error',
+            'message' => 'Invalid norek. No corresponding NomorRekening found.',
+        ], 400);
+    }
+
+    $existingSaldo = $nomorRekening->saldo;
+    $newSaldo = $existingSaldo + $request->jumlah;
+    $nomorRekening->update(['saldo' => $newSaldo]);
+
+    $transaction = Transaksi::create([
+        'id_user' => $id,
+        'id_norek' => $nomorRekening->id_norek,
+        'jumlah' => $request->jumlah,
+        'jenis_transaksi' => 'Deposit', 
+        'tanggal_transaksi' => now(), 
+    ]);
+
+    return response([
+        'status' => 'success',
+        'message' => 'Transaction created successfully',
+        'data' => $transaction,
+    ], 201);
+}
+
+
+public function transfer(Request $request, NomorRekening $nomorRekening)
+{
+    $id = auth()->user()->id;
+
+    $validator = Validator::make($request->all(), [
+        'jumlah' => 'required',
         'tfNorek' => 'required',
     ]);
 
@@ -155,7 +198,7 @@ public function transfer(Request $request)
         ], 400);
     }
 
-    $nomorRekening = NomorRekening::where('norek', $request->norek)->first();
+    $nomorRekening = NomorRekening::findOrFail($nomorRekening->id_norek);
     $tfNomorRekening = NomorRekening::where('norek', $request->tfNorek)->first();
 
     if (!$nomorRekening) {
@@ -195,49 +238,4 @@ public function transfer(Request $request)
     ], 201);
 }
 
-
-public function deposit(Request $request)
-{
-    $id = auth()->user()->id;
-
-    $validator = Validator::make($request->all(), [
-        'jumlah' => 'required',
-        'norek' => 'required',
-    ]);
-
-    if ($validator->fails()) {
-        return response([
-            'status' => 'error',
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 400);
-    }
-
-    $nomorRekening = NomorRekening::where('norek', $request->norek)->first();
-
-    if (!$nomorRekening) {
-        return response([
-            'status' => 'error',
-            'message' => 'Invalid norek. No corresponding NomorRekening found.',
-        ], 400);
-    }
-
-    $existingSaldo = $nomorRekening->saldo;
-    $newSaldo = $existingSaldo + $request->jumlah;
-    $nomorRekening->update(['saldo' => $newSaldo]);
-
-    $transaction = Transaksi::create([
-        'id_user' => $id,
-        'id_norek' => $nomorRekening->id_norek,
-        'jumlah' => $request->jumlah,
-        'jenis_transaksi' => 'Transfer', 
-        'tanggal_transaksi' => now(), 
-    ]);
-
-    return response([
-        'status' => 'success',
-        'message' => 'Transaction created successfully',
-        'data' => $transaction,
-    ], 201);
-}
 }

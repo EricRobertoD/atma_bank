@@ -30,8 +30,8 @@ Route::middleware(['auth:sanctum', 'ability:web'])->group(function(){
     Route::get('profile', 'App\Http\Controllers\AuthController@index');
     Route::post('profile', 'App\Http\Controllers\AuthController@update');
 
-    Route::post('deposit', 'App\Http\Controllers\TransaksiController@deposit');
-    Route::post('transfer', 'App\Http\Controllers\TransaksiController@transfer');
+    Route::post('deposit/{nomorRekening}', 'App\Http\Controllers\TransaksiController@deposit');
+    Route::post('transfer/{nomorRekening}', 'App\Http\Controllers\TransaksiController@transfer');
     Route::get('transaksi', 'App\Http\Controllers\TransaksiController@index');
 });
 
