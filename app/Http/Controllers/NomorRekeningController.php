@@ -113,4 +113,22 @@ class NomorRekeningController extends Controller
             'data' => $nomorRekening
         ], 200);
     }
+
+    
+    public function indexAdmin(){
+        $norek = NomorRekening::all();
+
+        if(count($norek) > 0){
+            return response([
+                'status' => 'success',
+                'data' => $norek
+            ], 200);
+        }
+
+        return response([
+            'status' => 'error',
+            'message' => 'Empty',
+            'data' => null
+        ], 400); 
+    }
 }

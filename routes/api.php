@@ -43,6 +43,8 @@ Route::middleware(['auth:sanctum', 'ability:admin'])->group(function(){
     Route::get('profileAdmin', 'App\Http\Controllers\AuthController@indexAdmin');
     Route::post('profileAdmin/{user}', 'App\Http\Controllers\AuthController@updateAdmin');
     Route::delete('profileAdmin/{user}', 'App\Http\Controllers\AuthController@destroyAdmin');
+    
+    Route::get('norekAdmin', 'App\Http\Controllers\NomorRekeningController@indexAdmin');
 
   
     Route::post('storeAdmin/{user}', 'App\Http\Controllers\NomorRekeningController@storeAdmin');  
