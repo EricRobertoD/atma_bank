@@ -21,6 +21,8 @@ Route::post('register', 'App\Http\Controllers\AuthController@register');
 Route::get('email-verification', 'App\Http\Controllers\AuthController@verify')->name('verification.verify');
 Route::post('login', 'App\Http\Controllers\AuthController@login');
 Route::post('logout', 'App\Http\Controllers\AuthController@logout');
+Route::post('loginAdmin', 'App\Http\Controllers\AuthController@loginAdmin');
+
 
 Route::middleware(['auth:sanctum', 'ability:web'])->group(function(){
     Route::get('nomorRekening', 'App\Http\Controllers\NomorRekeningController@index');
