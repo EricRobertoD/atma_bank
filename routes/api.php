@@ -40,6 +40,8 @@ Route::middleware(['auth:sanctum', 'ability:web'])->group(function(){
 
 
 Route::middleware(['auth:sanctum', 'ability:admin'])->group(function(){
+    Route::delete('nomorRekening/{nomorRekening}', 'App\Http\Controllers\NomorRekeningController@destroy');
+    
     Route::get('profileAdmin', 'App\Http\Controllers\AuthController@indexAdmin');
     Route::post('profileAdmin/{user}', 'App\Http\Controllers\AuthController@updateAdmin');
     Route::delete('profileAdmin/{user}', 'App\Http\Controllers\AuthController@destroyAdmin');
