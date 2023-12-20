@@ -31,111 +31,6 @@ class TransaksiController extends Controller
         ], 200);
     }
 
-
-    public function transferAdmin(Request $request)
-{
-    $id = auth()->user()->id;
-
-    $validator = Validator::make($request->all(), [
-        'jumlah' => 'required',
-        'norek' => 'required',
-        'tfNorek' => 'required',
-    ]);
-
-    if ($validator->fails()) {
-        return response([
-            'status' => 'error',
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 400);
-    }
-
-    $nomorRekening = NomorRekening::where('norek', $request->norek)->first();
-    $tfNomorRekening = NomorRekening::where('norek', $request->tfNorek)->first();
-
-    if (!$nomorRekening) {
-        return response([
-            'status' => 'error',
-            'message' => 'Invalid norek. No corresponding NomorRekening found.',
-        ], 400);
-    }
-    if (!$tfNomorRekening) {
-        return response([
-            'status' => 'error',
-            'message' => 'Invalid tujuan norek. No corresponding NomorRekening found.',
-        ], 400);
-    }
-
-    $existingSaldo = $nomorRekening->saldo;
-    $newSaldo = $existingSaldo - $request->jumlah;
-    $nomorRekening->update(['saldo' => $newSaldo]);
-
-    
-    $tfExistingSaldo = $tfNomorRekening->saldo;
-    $tfNewSaldo = $tfExistingSaldo + $request->jumlah;
-    $tfNomorRekening->update(['saldo' => $tfNewSaldo]);
-
-    $transaction = Transaksi::create([
-        'id_user' => $id,
-        'id_norek' => $nomorRekening->id_norek,
-        'jumlah' => $request->jumlah,
-        'jenis_transaksi' => 'deposit', 
-        'tanggal_transaksi' => now(), 
-    ]);
-
-    return response([
-        'status' => 'success',
-        'message' => 'Transaction created successfully',
-        'data' => $transaction,
-    ], 201);
-}
-
-    
-public function depositAdmin(Request $request)
-{
-    $id = auth()->user()->id;
-
-    $validator = Validator::make($request->all(), [
-        'jumlah' => 'required',
-        'norek' => 'required',
-    ]);
-
-    if ($validator->fails()) {
-        return response([
-            'status' => 'error',
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 400);
-    }
-
-    $nomorRekening = NomorRekening::where('norek', $request->norek)->first();
-
-    if (!$nomorRekening) {
-        return response([
-            'status' => 'error',
-            'message' => 'Invalid norek. No corresponding NomorRekening found.',
-        ], 400);
-    }
-
-    $existingSaldo = $nomorRekening->saldo;
-    $newSaldo = $existingSaldo + $request->jumlah;
-    $nomorRekening->update(['saldo' => $newSaldo]);
-
-    $transaction = Transaksi::create([
-        'id_user' => $id,
-        'id_norek' => $nomorRekening->id_norek,
-        'jumlah' => $request->jumlah,
-        'jenis_transaksi' => 'Transfer', 
-        'tanggal_transaksi' => now(), 
-    ]);
-
-    return response([
-        'status' => 'success',
-        'message' => 'Transaction created successfully',
-        'data' => $transaction,
-    ], 201);
-}
-
 public function deposit(Request $request, NomorRekening $nomorRekening)
 {
     $id = auth()->user()->id;
@@ -224,7 +119,7 @@ public function transfer(Request $request, NomorRekening $nomorRekening)
         'id_user' => $id,
         'id_norek' => $nomorRekening->id_norek,
         'jumlah' => $request->jumlah,
-        'jenis_transaksi' => 'deposit', 
+        'jenis_transaksi' => 'Transfer', 
         'tanggal_transaksi' => now(), 
     ]);
 
